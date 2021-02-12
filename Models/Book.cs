@@ -10,11 +10,12 @@ namespace WebApplication.Models
         public int Id { get; set; }
         [Required]
         public string Name { get; set; }
-        public virtual ICollection<Author> Authors { get; set; }
+       // public virtual ICollection<Author> Authors { get; set; }
+        public virtual ICollection<AuthorBook> AuthorBooks { get; set; }
 
         public Book()
         {
-            Authors = new List<Author>();
+          //  Authors = new List<Author>();
         }
     }
 }

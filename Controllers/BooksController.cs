@@ -31,20 +31,47 @@ namespace WebApplication.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Book>> GetBook(int id)
         {
-            var book = await context.Books.FindAsync(id);            
+            var bookToGet = await context.Books.Include(book => book.Authors).SingleOrDefaultAsync(book => book.Id == id);            
 
-            if (book == null)
+            if (bookToGet == null)
             {
                 return NotFound();
             }
 
-            return book;
+            return bookToGet;
         }
 
         // PUT: api/Books/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutBook(int id, Book book)
+        {
+            if (id != book.Id)
+            {
+                return BadRequest();
+            }
+
+            context.Entry(book).State = EntityState.Modified;
+
+            try
+            {
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!BookExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+        public async Task<IActionResult> PutBook(int id, Book book, int authorId)
         {
             if (id != book.Id)
             {

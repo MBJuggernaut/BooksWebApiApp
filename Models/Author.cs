@@ -12,6 +12,7 @@ namespace WebApplication.Models
         [Required]
         public string Name { get; set; }
         public virtual ICollection<Book> Books { get; set; }
+        public virtual ICollection<AuthorBook> AuthorBooks { get; set; }
 
         public Author()
         {

@@ -8,16 +8,44 @@ namespace WebApplication.Models
     {
         public DbSet<Book> Books { get; set; }
         public DbSet<Author> Authors { get; set; }
+        public DbSet<AuthorBook> AuthorBooks { get; set; }
 
         public BooksDataContext(DbContextOptions<BooksDataContext> options)
             : base(options)
         {
             Database.EnsureCreated();
-
-            if (!Books.Any() && !Authors.Any())
-                Seed();
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<AuthorBook>()
+                         .HasKey(e => new { e.BookId, e.AuthorId });
+
+            modelBuilder.Entity<AuthorBook>().HasOne(x => x.Book).WithMany(x => x.AuthorBooks).HasForeignKey(bc => bc.BookId);
+            modelBuilder.Entity<AuthorBook>().HasOne(x => x.Author).WithMany(x => x.AuthorBooks).HasForeignKey(bc => bc.AuthorId);
+
+
+            modelBuilder.Entity<Book>()
+       .HasData(
+         new Book { Id = 1, Name = "Dune" },
+         new Book { Id = 2, Name = "Dune 2" },
+         new Book { Id = 3, Name = "War and Peace" }
+       );
+            modelBuilder.Entity<Author>()
+         .HasData(
+           new Author { Id = 1, Name = "Frank Herbert" },
+           new Author { Id = 2, Name = "Brian Herbert" },
+           new Author { Id = 3, Name = "Lev Tolstoy" }
+         );
+            modelBuilder.Entity<AuthorBook>()
+         .HasData(
+
+            new AuthorBook { BookId = 1, AuthorId = 1 },
+            new AuthorBook { BookId = 2, AuthorId = 1 },
+            new AuthorBook { BookId = 2, AuthorId = 2 },
+            new AuthorBook { BookId = 3, AuthorId = 3 }
+         );
+        }
         private void Seed()
         {
             Author author1 = new Author { Name = "Frank Herbert" };
