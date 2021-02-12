@@ -1,11 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using WebApplication.Models;
 
 namespace WebApplication
 {
@@ -13,7 +8,8 @@ namespace WebApplication
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            var x = CreateHostBuilder(args).Build();
+            x.Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
@@ -22,5 +18,7 @@ namespace WebApplication
                 {
                     webBuilder.UseStartup<Startup>();
                 });
+
+
     }
 }

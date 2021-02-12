@@ -21,9 +21,7 @@ namespace WebApplication.Controllers
         // GET: api/Books
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Book>>> GetBooks()
-        {
-           // var x = await _context.Books.ToListAsync();
-
+        {          
             return await context.Books.Include(b=>b.Authors).ToListAsync();
         }
 
