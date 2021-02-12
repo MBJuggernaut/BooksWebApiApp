@@ -20,23 +20,23 @@ namespace WebApplication.Controllers
 
         // GET: api/Books
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Book>>> GetBooks()
+        public async Task<ActionResult<IEnumerable<BookDto>>> GetBooks()
         {          
-            return await context.Books.Include(b=>b.Authors).ToListAsync();
+            return await context.Books.Include(b => b.Authors).Select(b => (BookDto)b).ToListAsync();
         }
 
         // GET: api/Books/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Book>> GetBook(int id)
+        public async Task<ActionResult<BookDto>> GetBook(int id)
         {
-            var book = await context.Books.FindAsync(id);            
+            var book = await context.Books.Include(b => b.Authors).FirstOrDefaultAsync(i=>i.Id == id);            
 
             if (book == null)
             {
                 return NotFound();
             }
 
-            return book;
+            return (BookDto)book;
         }
 
         // PUT: api/Books/5
@@ -49,10 +49,53 @@ namespace WebApplication.Controllers
                 return BadRequest();
             }
 
-            context.Entry(book).State = EntityState.Modified;
+            try
+            {
+                var bookToChange = await context.Books.FindAsync(id);
+                bookToChange = book;
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!BookExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // PUT: api/Books/5
+        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutBookWithNewAuthors(int id, Book book, int[] authorId)
+        {
+            if (id != book.Id)
+            {
+                return BadRequest();
+            }
 
             try
             {
+                var bookToChange = await context.Books.FindAsync(id);
+                bookToChange = book;                
+
+                foreach(var Id in authorId)
+                {
+                    var author = context.Authors.FirstOrDefault(i => i.Id == Id);
+
+                    if(author == null)
+                    {
+                        return NotFound();
+                    }
+
+                    bookToChange.Authors.Add(author);
+                }
                 await context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -73,8 +116,21 @@ namespace WebApplication.Controllers
         // POST: api/Books
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Book>> PostBook(Book book)
+        public async Task<ActionResult<Book>> PostBook(Book book, int[] authorId)
         {
+            var bookToAdd = book;
+            foreach (var Id in authorId)
+            {
+                var author = context.Authors.FirstOrDefault(i => i.Id == Id);
+
+                if (author == null)
+                {
+                    return NotFound();
+                }
+
+                bookToAdd.Authors.Add(author);
+            }
+
             context.Books.Add(book);
             await context.SaveChangesAsync();
 
