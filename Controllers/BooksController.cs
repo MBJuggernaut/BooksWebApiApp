@@ -77,7 +77,7 @@ namespace WebApplication.Controllers
         public async Task<ActionResult<Book>> PostBook(Book book)
         {
             var authors = (List<Author>)book.Authors;
-            for (int i = 0; i < book.Authors.Count; i++)
+            for (int i = 0; i < authors.Count; i++)
             {
                 if (context.Authors.Any(e => e.Name == authors[i].Name))
                 {

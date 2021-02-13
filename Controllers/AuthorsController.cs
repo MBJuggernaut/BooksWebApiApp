@@ -13,32 +13,32 @@ namespace WebApplication.Controllers
     [ApiController]
     public class AuthorsController : ControllerBase
     {
-        private readonly BooksDataContext _context;
+        private readonly BooksDataContext context;
 
-        public AuthorsController(BooksDataContext context)
+        public AuthorsController(BooksDataContext _context)
         {
-            _context = context;
+            this.context = _context;
         }
 
         // GET: api/Authors
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Author>>> GetAuthors()
+        public async Task<ActionResult<IEnumerable<AuthorDto>>> GetAuthors()
         {
-            return await _context.Authors.ToListAsync();
+            return await context.Authors.Include(b => b.Books).Select(b => (AuthorDto)b).ToListAsync();
         }
 
         // GET: api/Authors/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Author>> GetAuthor(int id)
+        public async Task<ActionResult<AuthorDto>> GetAuthor(int id)
         {
-            var author = await _context.Authors.FindAsync(id);
+            var author = await context.Authors.Include(b => b.Books).FirstOrDefaultAsync(i => i.Id == id);
 
             if (author == null)
             {
                 return NotFound();
             }
 
-            return author;
+            return (AuthorDto)author;
         }
 
         // PUT: api/Authors/5
@@ -51,11 +51,12 @@ namespace WebApplication.Controllers
                 return BadRequest();
             }
 
-            _context.Entry(author).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                var authorToChange = await context.Authors.FindAsync(id);
+                authorToChange.Name = author.Name;
+                authorToChange.Books = author.Books;
+                await context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -77,8 +78,18 @@ namespace WebApplication.Controllers
         [HttpPost]
         public async Task<ActionResult<Author>> PostAuthor(Author author)
         {
-            _context.Authors.Add(author);
-            await _context.SaveChangesAsync();
+            var books = (List<Book>)author.Books;
+            for (int i = 0; i < books.Count; i++)
+            {
+                if (context.Authors.Any(e => e.Name == books[i].Name))
+                {
+                    string name = books[i].Name;
+                    books[i] = context.Books.FirstOrDefaultAsync(i => i.Name == name).Result;
+                }
+            }
+            author.Books = books;
+            context.Authors.Add(author);
+            await context.SaveChangesAsync();
 
             return CreatedAtAction("GetAuthor", new { id = author.Id }, author);
         }
@@ -87,21 +98,21 @@ namespace WebApplication.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAuthor(int id)
         {
-            var author = await _context.Authors.FindAsync(id);
+            var author = await context.Authors.FindAsync(id);
             if (author == null)
             {
                 return NotFound();
             }
 
-            _context.Authors.Remove(author);
-            await _context.SaveChangesAsync();
+            context.Authors.Remove(author);
+            await context.SaveChangesAsync();
 
             return NoContent();
         }
 
         private bool AuthorExists(int id)
         {
-            return _context.Authors.Any(e => e.Id == id);
+            return context.Authors.Any(e => e.Id == id);
         }
     }
 }
