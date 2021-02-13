@@ -70,67 +70,11 @@ namespace WebApplication.Controllers
             return NoContent();
         }
 
-        // PUT: api/Books/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutBookWithNewAuthors(int id, Book book, int[] authorId)
-        {
-            if (id != book.Id)
-            {
-                return BadRequest();
-            }
-
-            try
-            {
-                var bookToChange = await context.Books.FindAsync(id);
-                bookToChange = book;                
-
-                foreach(var Id in authorId)
-                {
-                    var author = context.Authors.FirstOrDefault(i => i.Id == Id);
-
-                    if(author == null)
-                    {
-                        return NotFound();
-                    }
-
-                    bookToChange.Authors.Add(author);
-                }
-                await context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!BookExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
         // POST: api/Books
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        public async Task<ActionResult<Book>> PostBook(Book book, int[] authorId)
+        public async Task<ActionResult<Book>> PostBook(Book book)
         {
-            var bookToAdd = book;
-            foreach (var Id in authorId)
-            {
-                var author = context.Authors.FirstOrDefault(i => i.Id == Id);
-
-                if (author == null)
-                {
-                    return NotFound();
-                }
-
-                bookToAdd.Authors.Add(author);
-            }
-
             context.Books.Add(book);
             await context.SaveChangesAsync();
 

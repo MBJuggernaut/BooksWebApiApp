@@ -43,9 +43,7 @@ namespace WebApplication
 
             var scope = app.ApplicationServices.CreateScope();
 
-            var seeder = scope.ServiceProvider.GetRequiredService<Seeder>();
-
-            seeder.Seed();
+            scope.ServiceProvider.GetRequiredService<Seeder>().Seed();            
         }
     }
 }

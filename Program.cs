@@ -8,8 +8,7 @@ namespace WebApplication
     {
         public static void Main(string[] args)
         {
-            var x = CreateHostBuilder(args).Build();
-            x.Run();
+            CreateHostBuilder(args).Build().Run();            
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
