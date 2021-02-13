@@ -21,7 +21,7 @@ namespace WebApplication.Controllers
         // GET: api/Books
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BookDto>>> GetBooks()
-        {          
+        {
             return await context.Books.Include(b => b.Authors).Select(b => (BookDto)b).ToListAsync();
         }
 
@@ -29,7 +29,7 @@ namespace WebApplication.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<BookDto>> GetBook(int id)
         {
-            var book = await context.Books.Include(b => b.Authors).FirstOrDefaultAsync(i=>i.Id == id);            
+            var book = await context.Books.Include(b => b.Authors).FirstOrDefaultAsync(i => i.Id == id);
 
             if (book == null)
             {
@@ -52,7 +52,8 @@ namespace WebApplication.Controllers
             try
             {
                 var bookToChange = await context.Books.FindAsync(id);
-                bookToChange = book;
+                bookToChange.Name = book.Name;
+                bookToChange.Authors = book.Authors;
                 await context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -75,6 +76,18 @@ namespace WebApplication.Controllers
         [HttpPost]
         public async Task<ActionResult<Book>> PostBook(Book book)
         {
+            var authors = (List<Author>)book.Authors;
+            for (int i = 0; i < book.Authors.Count; i++)
+            {
+                if (context.Authors.Any(e => e.Name == authors[i].Name))
+                {
+                    string name = authors[i].Name;
+                    authors[i] = context.Authors.FirstOrDefaultAsync(i => i.Name == name).Result;                   
+                }
+            }
+            book.Authors = authors;
+
+
             context.Books.Add(book);
             await context.SaveChangesAsync();
 
