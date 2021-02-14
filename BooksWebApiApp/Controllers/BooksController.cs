@@ -53,7 +53,7 @@ namespace WebApplication.Controllers
             {
                 var bookToChange = await context.Books.FindAsync(id);
                 bookToChange.Name = book.Name;
-                bookToChange.Authors = book.Authors;
+                bookToChange.Authors = GetAuthors(book);
                 await context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
@@ -76,17 +76,7 @@ namespace WebApplication.Controllers
         [HttpPost]
         public async Task<ActionResult<Book>> PostBook(Book book)
         {
-            var authors = (List<Author>)book.Authors;
-            for (int i = 0; i < authors.Count; i++)
-            {
-                if (context.Authors.Any(e => e.Name == authors[i].Name))
-                {
-                    string name = authors[i].Name;
-                    authors[i] = context.Authors.FirstOrDefaultAsync(i => i.Name == name).Result;                   
-                }
-            }
-            book.Authors = authors;
-
+            book.Authors = GetAuthors(book);
 
             context.Books.Add(book);
             await context.SaveChangesAsync();
@@ -113,6 +103,21 @@ namespace WebApplication.Controllers
         private bool BookExists(int id)
         {
             return context.Books.Any(e => e.Id == id);
+        }
+
+        private List<Author> GetAuthors(Book book)
+        {
+            var authors = (List<Author>)book.Authors;
+            for (int i = 0; i < authors.Count; i++)
+            {
+                string name = authors[i].Name;
+                var authorWithSuchName = context.Authors.FirstOrDefaultAsync(i => i.Name == name).Result;
+                if (authorWithSuchName != null)
+                {
+                    authors[i] = authorWithSuchName;
+                }
+            }
+            return authors;
         }
     }
 }
