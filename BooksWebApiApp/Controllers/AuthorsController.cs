@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web.Http.Description;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -39,6 +40,21 @@ namespace WebApplication.Controllers
             }
 
             return (AuthorDto)author;
+        }
+
+        [Route("{id:int}/bookscount")]
+        [ResponseType(typeof(int))]
+        public async Task<ActionResult> GetAuthorBookCount(int id)
+        {
+            var author = await context.Authors.Include(b => b.Books).FirstOrDefaultAsync(i => i.Id == id);
+            var booksCount = author.Books.Count();
+
+            if (author == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(booksCount);
         }
 
         // PUT: api/Authors/5
